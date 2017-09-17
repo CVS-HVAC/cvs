@@ -1,0 +1,5 @@
+{
+    "js/cvs.min.js": [
+        "public/js/utils.js"
+    ]
+}
