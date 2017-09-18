@@ -3,7 +3,7 @@
 frappe.provide("cvs");
 frappe.provide("cvs.utils");
 
-$.extend(cvs, {
+$.extend(cvs.utils, {
 	toList: function(value){
 		if(!$.isArray(value))
 			value = [value];
@@ -34,7 +34,7 @@ $.extend(cvs, {
 		}
 		return this.toList(dval);
 	},
-	get_item_prev_doc: function(fieldname) {
+	get_item_prev_docname: function(fieldname) {
 		// prevdoc_docname
 		fieldname = frappe.model.scrub(fieldname);
 		var prev_doc = [];
