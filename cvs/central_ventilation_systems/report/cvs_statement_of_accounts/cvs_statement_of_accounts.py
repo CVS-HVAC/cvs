@@ -145,7 +145,6 @@ class ReceivablePayableReport(object):
 		data += self.get_pdc_data(party_naming_by,args)
 		data = sorted(data, key=itemgetter(0))
 		self.add_balance(data, args.get("party_type"))
-		frappe.msgprint("Data: {0} ".format(data))
 		return data
 
 
