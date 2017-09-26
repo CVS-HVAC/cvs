@@ -35,6 +35,83 @@ class ReceivablePayableReport(object):
 
 		credit_or_debit_note = "Credit Note" if args.get("party_type") == "Customer" else "Debit Note"
 
+		for label in ("Invoiced Amount", "Outstanding Amount"):
+			columns.append({
+				"label": label,
+				"fieldtype": "Currency",
+				"options": "currency",
+				"width": 120
+			})
+
+		columns += [_("Age (Days)") + ":Int:80"]
+		
+		self.ageing_col_idx_start = len(columns)
+
+		if not "range1" in self.filters:
+			self.filters["range1"] = "30"
+		if not "range2" in self.filters:
+			self.filters["range2"] = "60"
+		if not "range3" in self.filters:
+			self.filters["range3"] = "90"
+			
+		#if self.filters.ageing_based_on == "Due Date":
+		columns.append({
+			"label": _("Not Due"),
+			"fieldtype": "Currency",
+			"options": "currency",
+			"width": 120
+		})
+
+
+		for label in ("0-{range1}".format(range1=self.filters["range1"]),
+			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),
+			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
+			"{range3}-{above}".format(range3=cint(self.filters["range3"])+ 1, above=_("Above"))):
+				columns.append({
+					"label": label,
+					"fieldtype": "Currency",
+					"options": "currency",
+					"width": 120
+				})
+
+		columns.append({
+			"fieldname": "currency",
+			"label": _("Currency"),
+			"fieldtype": "Link",
+			"options": "Currency",
+			"width": 100
+		})
+		#if args.get("party_type") == "Customer":
+		#	columns += [
+		#		_("Territory") + ":Link/Territory:80", 
+		#		_("Customer Group") + ":Link/Customer Group:120"
+		#	]
+		#if args.get("party_type") == "Supplier":
+		#	columns += [_("Supplier Type") + ":Link/Supplier Type:80"]
+			
+		
+		#=== Append PDC and LPO columns ==============
+		self.append_extra_columns(columns)
+
+		columns.append(_("Remarks") + "::200")
+
+		return columns
+
+
+	def zzzget_columns(self, party_naming_by, args):
+		columns = [_("Posting Date") + ":Date:80", _(args.get("party_type")) + ":Link/" + args.get("party_type") + ":200"]
+
+		if party_naming_by == "Naming Series":
+			columns += [args.get("party_type") + " Name::110"]
+
+		columns += [_("Voucher Type") + "::110", _("Voucher No") + ":Dynamic Link/"+_("Voucher Type")+":120",
+			_("Due Date") + ":Date:80"]
+
+		if args.get("party_type") == "Supplier":
+			columns += [_("Bill No") + "::80", _("Bill Date") + ":Date:80"]
+
+		credit_or_debit_note = "Credit Note" if args.get("party_type") == "Customer" else "Debit Note"
+
 		for label in ("Invoiced Amount", "Paid Amount", credit_or_debit_note, "Outstanding Amount"):
 			columns.append({
 				"label": label,
@@ -91,7 +168,7 @@ class ReceivablePayableReport(object):
 			
 		
 		#=== Append PDC and LPO columns ==============
-		self.append_extra_columns(columns)
+		#self.append_extra_columns(columns)
 
 		columns.append(_("Remarks") + "::200")
 
@@ -142,7 +219,8 @@ class ReceivablePayableReport(object):
 					# invoiced and paid amounts
 					invoiced_amount = gle.get(dr_or_cr) if (gle.get(dr_or_cr) > 0) else 0
 					paid_amt = invoiced_amount - outstanding_amount - credit_note_amount
-					row += [invoiced_amount, paid_amt, credit_note_amount, outstanding_amount]
+					#row += [invoiced_amount, paid_amt, credit_note_amount, outstanding_amount]
+					row += [invoiced_amount, outstanding_amount]
 
 					# ageing data
 					entry_date = due_date if self.filters.ageing_based_on == "Due Date" else gle.posting_date
@@ -160,10 +238,10 @@ class ReceivablePayableReport(object):
 						row.append(company_currency)
 
 					# customer territory / supplier type
-					if args.get("party_type") == "Customer":
-						row += [self.get_territory(gle.party), self.get_customer_group(gle.party)]
-					if args.get("party_type") == "Supplier":
-						row += [self.get_supplier_type(gle.party)]
+					#if args.get("party_type") == "Customer":
+					#	row += [self.get_territory(gle.party), self.get_customer_group(gle.party)]
+					#if args.get("party_type") == "Supplier":
+					#	row += [self.get_supplier_type(gle.party)]
 
 					# pdc and balance
 					pdc = pdc_details.get(gle.voucher_no, {})
@@ -365,14 +443,15 @@ class ReceivablePayableReport(object):
 	def append_extra_columns(self, columns):
 		columns += [
 			_("PDC Date") + ":Date:80", 
-			_("PDC Ref") + ":Data:100"
+			_("PDC Ref") + ":Data:100",
+			_("PDC Amount") + ":Currency/currency:120"
 		]
-		columns.append({
-			"label": _("PDC Amount"),
-			"fieldtype": "Currency",
-			"options": "currency",
-			"width": 120
-		})
+		#columns.append({
+		#	"label": _("PDC Amount"),
+		#	"fieldtype": "Currency",
+		#	"options": "currency",
+		#	"width": 120
+		#})
 		columns += [_("Customer LPO") + ":Data:100"]
 
 	#======= End of PDC section ================================================================================================
