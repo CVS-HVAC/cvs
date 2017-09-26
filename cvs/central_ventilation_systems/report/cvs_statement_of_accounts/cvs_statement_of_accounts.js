@@ -10,23 +10,6 @@ frappe.query_reports["CVS Statement of Accounts"] = {
  			"options": "Company",
  			"default": frappe.defaults.get_user_default("Company")
  		},
-		{
-			"fieldname":"cost_center",
-			"label": __("Cost Center"),
-			"fieldtype": "Link",
-			"options": "Cost Center",
-			"get_query": function() {
-				var company = frappe.query_report.filters_by_name.company.get_value();
-				return {
-					"doctype": "Cost Center",
-					"filters": {
-						"company": company,
-					        "is_group": 0
-					}
-				}
-			},
-
-		},
 
 		{
 			"fieldname":"customer",
@@ -52,14 +35,14 @@ frappe.query_reports["CVS Statement of Accounts"] = {
 			"default": get_today()
 		},
 		{
+			"fieldtype": "Break",
+		},
+		{
 			"fieldname":"ageing_based_on",
 			"label": __("Ageing Based On"),
 			"fieldtype": "Select",
 			"options": 'Posting Date' + NEWLINE + 'Due Date',
-			"default": "Posting Date"
-		},
-		{
-			"fieldtype": "Break",
+			"default": "Due Date"
 		},
 		{
 			"fieldname":"range1",
@@ -81,18 +64,6 @@ frappe.query_reports["CVS Statement of Accounts"] = {
 			"fieldtype": "Int",
 			"default": "90",
 			"reqd": 1
-		},
-		{
-		
-			"fieldname":"party_address",
-			"fieldtype": "Data"
-		},
-		{
-			"fieldname":"letter_head",
-			"label": __("Letter Head"),
-			"fieldtype": "Link",
-			"options": "Letter Head"
 		}
-
 	]
 }
