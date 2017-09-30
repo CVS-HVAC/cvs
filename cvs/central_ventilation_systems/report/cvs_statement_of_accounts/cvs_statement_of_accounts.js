@@ -17,16 +17,6 @@ frappe.query_reports["CVS Statement of Accounts"] = {
 			"fieldtype": "Link",
 			"reqd":1,
 			"options": "Customer",
-			"on_change": function(query_report) {
-				var party = query_report.get_values().customer;
-				if (!party) {
-					return;
-				}
-				//var party_address = query_report.filters_by_name.party_address;
-				//erpnext.utils.set_report_party_address("Customer",party, party_address);
-				query_report.trigger_refresh();
-			}
-
 		},
 		{
 			"fieldname":"report_date",
@@ -41,8 +31,9 @@ frappe.query_reports["CVS Statement of Accounts"] = {
 			"fieldname":"ageing_based_on",
 			"label": __("Ageing Based On"),
 			"fieldtype": "Select",
-			"options": 'Posting Date' + NEWLINE + 'Due Date',
-			"default": "Due Date"
+			//"options": 'Posting Date' + NEWLINE + 'Due Date',
+			"options": 'Posting Date',
+			"default": "Posting Date"
 		},
 		{
 			"fieldname":"range1",

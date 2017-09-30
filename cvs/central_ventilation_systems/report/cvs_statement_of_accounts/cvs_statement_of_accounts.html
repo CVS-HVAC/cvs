@@ -1,127 +1,167 @@
-<h4 class="text-center">{%= __("Customer ") %} : {%= filters.customer %}</h4>
-<h4 class="text-center">{%= __("Statement of Account as of ") %} {%= dateutil.str_to_user(filters.report_date) %}</h4>
+<style>
+    table {
+        table-layout: fixed;
+    }
+    table th, table td {
+            overflow: hidden;
+	    white-space: normal;
+	    word-wrap: break-word;
+    }
+    table th{
+	text-align: center;
+    }
+
+.print-format table, .print-format tr, 
+.print-format td, .print-format div, .print-format p,
+.print-format span
+{
+        font-family: Tahoma, sans-serif;
+}
+
+@media print {
+   thead {display: table-header-group;}
+   .print-format {
+        font-family: Tahoma, sans-serif;
+    }
+}
+</style>
+<div style="min-height:30px; max-height:30px;">
+<h4 class="text-left">{%= __("Customer ") %} : {%= filters.customer %}</h4>
+<h5 class="text-left">{%= __("Statement of Account as of ") %} {%= moment(filters.report_date).format('MMMM Do, YYYY') %}</h5>
 
 {% var balance_row = data.slice(-1).pop() ; 
-	   var range0 = report.columns[9].label;
-	   var range1 = report.columns[10].label;
-	   var range2 = report.columns[11].label;
-	   var range3 = report.columns[12].label;
-	   var range4 = report.columns[13].label;
+	   var range0 = report.columns[8].label;
+	   var range1 = report.columns[9].label;
+	   var range2 = report.columns[10].label;
+	   var range3 = report.columns[11].label;
+	   var range4 = report.columns[12].label;
 
 %}
-<br>
-<div class="row">        
-     <div class="col-xs-6">  </div>
-     <div class="col-xs-6 text-right">(Amount in {%= data[0][__("currency")] || "" %})</div>
-</div>
+<div style="min-height:30px; max-height:30px;">
 {% if(balance_row) { %}
-<table class="table table-bordered">
-	<thead style="display: table-header-group;">
+<table class="table table-bordered table-condensed table-sm small">
+	<caption class="text-right">(Amount in {%= data[0][__("currency")] || "" %})</caption>
+	<thead>
 		<tr>
-			<th class="text-left" style="width: 25%">{%= __(" ") %}</th>
-			<th class="text-right" style="width: 10%">{%= __(range0) %}</th>
-			<th class="text-right" style="width: 10%">{%= __(range1) %}</th>
-			<th class="text-right" style="width: 10%">{%= __(range2) %}</th>
-			<th class="text-right" style="width: 10%">{%= __(range3) %}</th>
-			<th class="text-right" style="width: 10%">{%= __(range4) %}</th>
-			<th class="text-right" style="width: 15%">{%= __("Total") %}</th>
+			<th>{%= __(" ") %}</th>
+			<th>{%= __(range1) %}</th>
+			<th>{%= __(range2) %}</th>
+			<th>{%= __(range3) %}</th>
+			<th>{%= __(range4) %}</th>
+			<th>{%= __("Total") %}</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
-			<td class="text-left">{%= __("Total Receivable") %}</td>
-			<td class="text-right">{%= format_currency(balance_row[range0]) %}</td>
+			<td>{%= __("Total Outstanding") %}</td>
 			<td class="text-right">{%= format_currency(balance_row[range1]) %}</td>
 			<td class="text-right">{%= format_currency(balance_row[range2]) %}</td>
 			<td class="text-right">{%= format_currency(balance_row[range3]) %}</td>
 			<td class="text-right">{%= format_currency(balance_row[range4]) %}</td>
-			<td class="text-right">{%= format_currency(flt(balance_row[__("Outstanding Amount")]), data[data.length-1]["currency"]) %}</td>
+			<td class="text-right">
+				{%= format_currency(flt(balance_row[__("Outstanding Amount")]), data[data.length-1]["currency"]) %}
+				</td>
 		</tr>
-			<td class="text-left">{%= __("PDC") %}</td>
+			<td>{%= __("PDC/LC") %}</td>
 			<td></td>
 			<td></td>
 			<td></td>
 			<td></td>
-			<td></td>
-			<td class="text-right">{%= format_currency(flt(balance_row[__("PDC Amount")]), data[data.length-1]["currency"]) %}</td>
+			<td class="text-right">
+				{%= format_currency(flt(balance_row[__("PDC/LC Amount")]), data[data.length-1]["currency"]) %}
+			</td>
 	</tbody>
 	<thead>
 		<tr>
-			<th class="text-left">{%= __("Cheques Required") %}</th>
+			<th>{%= __("Cheques Required") %}</th>
 			<th></th>
 			<th></th>
 			<th></th>
 			<th></th>
-			<th></th>
-			<th class="text-right">{%= format_currency(flt(balance_row[__("Outstanding Amount")]-balance_row[__("PDC Amount")]), data[data.length-1]["currency"]) %}</th>
+			<th class="text-right">
+				{%= format_currency(flt(balance_row[__("Outstanding Amount")]-balance_row[__("PDC/LC Amount")]), data[data.length-1]["currency"]) %}</th>
 		</tr>
 	</thead>
 
 </table>
 {% } %}
-<br>
-<table class="table table-bordered">
-	<thead style="display: table-header-group;">
+<div style="min-height:25px; max-height:25px;">
+<table class="table table-bordered table-condensed table-sm small">
+        <colgroup>
+            <col style="width: 18mm;">
+            <col style="width: 20mm;">
+            <col style="width: 17mm;">
+            <col style="width: 20mm;">
+            <col style="width: 22mm;">
+            <col style="width: 20mm;">
+            <col style="width: 18mm;">
+            <col style="width: 22mm;">
+            <col style="width: 17mm">
+        </colgroup>
+
+	<thead>
 		<tr>
-			<th class="text-center" style="width:12%; word-break: keep-all;">{%= __("Date") %}</th>
-			<th class="text-left" style="width:11%; word-break: keep-all;">{%= __("CVS Invoice No.") %}</th>
-			<th class="text-right" style="width: 10%; word-break: keep-all;">{%= __("Invoiced Amount") %}</th>
-			<th class="text-right" style="width: 10%; word-break: keep-all;">{%= __("Outstanding Amount") %}</th>
-			<th class="text-left" style="width: 10%; word-break: keep-all;">{%= __("Customer LPO No.") %}</th>
-			<th class="text-center" style="width: 12%; word-break: keep-all;">{%= __("PDC/LC Date") %}</th>
-			<th class="text-left" style="width: 8%; word-break: keep-all;">{%= __("PDC/LC Ref") %}</th>
-			<th class="text-right" style="width: 10%; word-break: keep-all;">{%= __("PDC Amount") %}</th>
+			<th>{%= __("Date") %}</th>
+			<th>{%= __("CVS Invoice No.") %}</th>
+			<th>{%= __("Invoiced Amount") %}</th>
+			<th>{%= __("Outstanding Amount") %}</th>
+			<th>{%= __("Customer LPO No.") %}</th>
+			<th>{%= __("Delivery Note") %}</th>
+			<th>{%= __("PDC/LC Date") %}</th>
+			<th>{%= __("PDC/LC Ref") %}</th>
+			<th>{%= __("PDC/LC Amount") %}</th>
 		</tr>
 	</thead>
 	<tbody>
-		{% for(var i=0, l=data.length; i<l; i++) { %}
-			<tr>
-				{% if(data[i][__("Customer")] || data[i][__("Supplier")]) { %}
+	{% for(var i=0, l=data.length; i<l; i++) { %}
+		<tr>
+		{% if(data[i][__("Customer")] || data[i][__("Supplier")]) { %}
 
-					<td class="text-center">{%= dateutil.str_to_user(data[i][__("Posting Date")]) %}</td>
-					<td class="text-left">
-						{%=  data[i][__("Voucher No")] %}</td>
-					<td class="text-right">
-						{%= format_currency(data[i][__("Invoiced Amount")], data[i]["currency"]) %}</td>
-					<td class="text-right">
-						{%= format_currency(data[i][__("Outstanding Amount")], data[i]["currency"]) %}</td>
-					<td class="text-left">
-						{%=  data[i][__("Customer LPO")] %}</td>
-					<td class="text-center">
-						{%=  dateutil.str_to_user(data[i][__("PDC Date")]) %}</td>
-					<td class="text-left">
-						{%=  data[i][__("PDC Ref")] %}</td>
-					<td class="text-right">
-						{%= format_currency(data[i][__("PDC Amount")], data[i]["currency"]) %}</td>
+			<td>{%= frappe.datetime.str_to_user(data[i][__("Posting Date")]) %}</td>
+			<td>
+				{%=  data[i][__("Voucher No")] %}</td>
+			<td class="text-right">
+				{%= format_currency(data[i][__("Invoiced Amount")], data[i]["currency"]) %}</td>
+			<td class="text-right">
+				{%= format_currency(data[i][__("Outstanding Amount")], data[i]["currency"]) %}</td>
+			<td>
+				{%=  data[i][__("Customer LPO")] %}</td>
+			<td>
+				{%=  data[i][__("Delivery Note")] %}</td>
+			<td>
+				{%=  frappe.datetime.str_to_user(data[i][__("PDC/LC Date")]) %}</td>
+			<td>
+				{%=  data[i][__("PDC/LC Ref")] %}</td>
+			<td class="text-right">
+				{%= format_currency(data[i][__("PDC/LC Amount")], data[i]["currency"]) %}</td>
 
-				{% } else { %}
+		{% } else { %}
 
-				{% } %}
-			</tr>
 		{% } %}
+		</tr>
+	{% } %}
 	</tbody>
 {% if(balance_row ) { %}
 	<thead>
 		<tr>
 			<th></th>
 			<th>{%= __("Total") %}</th>
-			<th style="text-align: right">
+			<th class="text-right">
 				{%= format_currency(flt(balance_row[__("Invoiced Amount")]), data[data.length-1]["currency"]) %}
 				</th>
-			<th style="text-align: right">
+			<th class="text-right">
 				{%= format_currency(flt(balance_row[__("Outstanding Amount")]), data[data.length-1]["currency"]) %}
 				</th>
 			<th></th>
 			<th></th>
 			<th></th>
-			<th style="text-align: right">
-				{%= format_currency(flt(balance_row[__("PDC Amount")]), data[data.length-1]["currency"]) %}
+			<th></th>
+			<th class="text-right">
+				{%= format_currency(flt(balance_row[__("PDC/LC Amount")]), data[data.length-1]["currency"]) %}
 				</th>
 		</tr>
 	</thead>
 {% } %}
 </table>
-<!--
-<p class="text-right text-muted">{{ __("Printed On ") }}{%= dateutil.str_to_user(dateutil.get_datetime_as_string()) %}</p>
-//-->
+<p class="text-right text-muted">{{ __("Printed On ") }}{%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
 

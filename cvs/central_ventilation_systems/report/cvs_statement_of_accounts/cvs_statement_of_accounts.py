@@ -54,13 +54,12 @@ class ReceivablePayableReport(object):
 		if not "range3" in self.filters:
 			self.filters["range3"] = "90"
 			
-		#if self.filters.ageing_based_on == "Due Date":
-		columns.append({
-			"label": _("Not Due"),
-			"fieldtype": "Currency",
-			"options": "currency",
-			"width": 120
-		})
+		#columns.append({
+		#	"label": _("Not Due"),
+		#	"fieldtype": "Currency",
+		#	"options": "currency",
+		#	"width": 120
+		#})
 
 
 		for label in ("0-{range1}".format(range1=self.filters["range1"]),
@@ -71,7 +70,7 @@ class ReceivablePayableReport(object):
 					"label": label,
 					"fieldtype": "Currency",
 					"options": "currency",
-					"width": 120
+					"width": 80
 				})
 
 		columns.append({
@@ -79,7 +78,7 @@ class ReceivablePayableReport(object):
 			"label": _("Currency"),
 			"fieldtype": "Link",
 			"options": "Currency",
-			"width": 100
+			"width": 80
 		})
 		#if args.get("party_type") == "Customer":
 		#	columns += [
@@ -132,12 +131,13 @@ class ReceivablePayableReport(object):
 			self.filters["range3"] = "90"
 			
 		#if self.filters.ageing_based_on == "Due Date":
-		columns.append({
-			"label": _("Not Due"),
-			"fieldtype": "Currency",
-			"options": "currency",
-			"width": 120
-		})
+		#columns.append({
+		#	"label": _("Not Due"),
+		#	"fieldtype": "Currency",
+		#	"options": "currency",
+		#	"width": 120
+		#
+		#})
 
 
 		for label in ("0-{range1}".format(range1=self.filters["range1"]),
@@ -168,7 +168,7 @@ class ReceivablePayableReport(object):
 			
 		
 		#=== Append PDC and LPO columns ==============
-		#self.append_extra_columns(columns)
+		self.append_extra_columns(columns)
 
 		columns.append(_("Remarks") + "::200")
 
@@ -250,6 +250,10 @@ class ReceivablePayableReport(object):
 					# customer LPO
 					row += [voucher_details.get(gle.voucher_no, {}).get("po_no")]
 
+					# Delivery Note
+					row += [voucher_details.get(gle.voucher_no, {}).get("delivery_note")]
+
+
 					row.append(gle.remarks)
 					data.append(row)
 
@@ -330,7 +334,7 @@ class ReceivablePayableReport(object):
 		voucher_details = frappe._dict()
 
 		if party_type == "Customer":
-			for si in frappe.db.sql("""select name, due_date, po_no
+			for si in frappe.db.sql("""select name, due_date, po_no, delivery_note
 				from `tabSales Invoice` where docstatus=1""", as_dict=1):
 					voucher_details.setdefault(si.name, si)
 
@@ -442,17 +446,12 @@ class ReceivablePayableReport(object):
 
 	def append_extra_columns(self, columns):
 		columns += [
-			_("PDC Date") + ":Date:80", 
-			_("PDC Ref") + ":Data:100",
-			_("PDC Amount") + ":Currency/currency:120"
+			_("PDC/LC Date") + ":Date:80", 
+			_("PDC/LC Ref") + ":Data:100",
+			_("PDC/LC Amount") + ":Currency/currency:120"
 		]
-		#columns.append({
-		#	"label": _("PDC Amount"),
-		#	"fieldtype": "Currency",
-		#	"options": "currency",
-		#	"width": 120
-		#})
 		columns += [_("Customer LPO") + ":Data:100"]
+		columns += [_("Delivery Note") + ":Data:100"]
 
 	#======= End of PDC section ================================================================================================
 
@@ -466,22 +465,19 @@ def execute(filters=None):
 
 def get_ageing_data(first_range, second_range, third_range, age_as_on, entry_date, outstanding_amount, filters=None):
 	# [0-30, 30-60, 60-90, 90-above]
-	outstanding_range = [0.0, 0.0, 0.0, 0.0, 0.0]
+	outstanding_range = [0.0, 0.0, 0.0, 0.0]
+
 	if not (age_as_on and entry_date):
 		return [0] + outstanding_range
 
 	age = (getdate(age_as_on) - getdate(entry_date)).days or 0
 	index = None
 	for i, days in enumerate([first_range, second_range, third_range]):
-		if filters and filters.ageing_based_on == "Due Date":
-			if age < 0:
-				index = 0
-				break
-			elif age <= days:
-				index = i+1
-				break
+		if age <= days:
+			index = i
+			break
 
-	if index is None: index = 4
+	if index is None: index = 3
 	outstanding_range[index] = outstanding_amount
 
 	return [age] + outstanding_range
@@ -496,13 +492,12 @@ def zzzget_ageing_data(first_range, second_range, third_range, age_as_on, entry_
 		age = (getdate(age_as_on) - getdate(entry_date)).days or 0
 		index = None
 		for i, days in enumerate([first_range, second_range, third_range]):
-			if filters and filters.ageing_based_on == "Due Date":
-				if age < 0:
-					index = 0
-					break
-				elif age <= days:
-					index = i+1
-					break
+			if age < 0:
+				index = 0
+				break
+			elif age <= days:
+				index = i+1
+				break
 
 		if index is None: index = 4
 		outstanding_range[index] = outstanding_amount
@@ -519,7 +514,6 @@ def zzzget_ageing_data(first_range, second_range, third_range, age_as_on, entry_
 		age = (getdate(age_as_on) - getdate(entry_date)).days or 0
 		index = None
 		for i, days in enumerate([first_range, second_range, third_range]):
-			frappe.msgprint("Age : {0} Days : {1}".format(age, days))
 			if age <= days:
 				index = i
 				break
