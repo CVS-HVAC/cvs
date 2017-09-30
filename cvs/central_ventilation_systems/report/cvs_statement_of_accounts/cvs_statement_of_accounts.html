@@ -25,22 +25,31 @@
     }
 }
 </style>
-<div style="min-height:30px; max-height:30px;">
+<br>
 <h4 class="text-left">{%= __("Customer ") %} : {%= filters.customer %}</h4>
 <h5 class="text-left">{%= __("Statement of Account as of ") %} {%= moment(filters.report_date).format('MMMM Do, YYYY') %}</h5>
 
 {% var balance_row = data.slice(-1).pop() ; 
-	   var range0 = report.columns[8].label;
 	   var range1 = report.columns[9].label;
 	   var range2 = report.columns[10].label;
 	   var range3 = report.columns[11].label;
 	   var range4 = report.columns[12].label;
-
+	   var range5 = report.columns[13].label;
 %}
 <div style="min-height:30px; max-height:30px;">
 {% if(balance_row) { %}
 <table class="table table-bordered table-condensed table-sm small">
 	<caption class="text-right">(Amount in {%= data[0][__("currency")] || "" %})</caption>
+        <colgroup>
+            <col style="width: 30mm;">
+            <col style="width: 18mm;">
+            <col style="width: 18mm;">
+            <col style="width: 18mm;">
+            <col style="width: 18mm;">
+            <col style="width: 18mm;">
+            <col style="width: 18mm;">
+        </colgroup>
+
 	<thead>
 		<tr>
 			<th>{%= __(" ") %}</th>
@@ -48,6 +57,7 @@
 			<th>{%= __(range2) %}</th>
 			<th>{%= __(range3) %}</th>
 			<th>{%= __(range4) %}</th>
+			<th>{%= __(range5) %}</th>
 			<th>{%= __("Total") %}</th>
 		</tr>
 	</thead>
@@ -58,11 +68,13 @@
 			<td class="text-right">{%= format_currency(balance_row[range2]) %}</td>
 			<td class="text-right">{%= format_currency(balance_row[range3]) %}</td>
 			<td class="text-right">{%= format_currency(balance_row[range4]) %}</td>
+			<td class="text-right">{%= format_currency(balance_row[range5]) %}</td>
 			<td class="text-right">
 				{%= format_currency(flt(balance_row[__("Outstanding Amount")]), data[data.length-1]["currency"]) %}
 				</td>
 		</tr>
 			<td>{%= __("PDC/LC") %}</td>
+			<td></td>
 			<td></td>
 			<td></td>
 			<td></td>
@@ -73,7 +85,8 @@
 	</tbody>
 	<thead>
 		<tr>
-			<th>{%= __("Cheques Required") %}</th>
+			<th class="text-left">{%= __("Cheques Required") %}</th>
+			<th></th>
 			<th></th>
 			<th></th>
 			<th></th>
@@ -163,5 +176,5 @@
 	</thead>
 {% } %}
 </table>
-<p class="text-right text-muted">{{ __("Printed On ") }}{%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+<p class="text-right text-muted small">{{ __("Printed On ") }}{%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
 

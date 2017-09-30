@@ -53,6 +53,9 @@ class ReceivablePayableReport(object):
 			self.filters["range2"] = "60"
 		if not "range3" in self.filters:
 			self.filters["range3"] = "90"
+		if not "range4" in self.filters:
+			self.filters["range4"] = "120"
+
 			
 		#columns.append({
 		#	"label": _("Not Due"),
@@ -65,7 +68,8 @@ class ReceivablePayableReport(object):
 		for label in ("0-{range1}".format(range1=self.filters["range1"]),
 			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),
 			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
-			"{range3}-{above}".format(range3=cint(self.filters["range3"])+ 1, above=_("Above"))):
+			"{range3}-{range4}".format(range3=cint(self.filters["range3"])+ 1, range4=self.filters["range4"]),
+			"{range4}-{above}".format(range4=cint(self.filters["range4"])+ 1, above=_("Above"))):
 				columns.append({
 					"label": label,
 					"fieldtype": "Currency",
@@ -80,6 +84,7 @@ class ReceivablePayableReport(object):
 			"options": "Currency",
 			"width": 80
 		})
+		
 		#if args.get("party_type") == "Customer":
 		#	columns += [
 		#		_("Territory") + ":Link/Territory:80", 
@@ -92,87 +97,10 @@ class ReceivablePayableReport(object):
 		#=== Append PDC and LPO columns ==============
 		self.append_extra_columns(columns)
 
-		columns.append(_("Remarks") + "::200")
+		#columns.append(_("Remarks") + "::200")
 
 		return columns
 
-
-	def zzzget_columns(self, party_naming_by, args):
-		columns = [_("Posting Date") + ":Date:80", _(args.get("party_type")) + ":Link/" + args.get("party_type") + ":200"]
-
-		if party_naming_by == "Naming Series":
-			columns += [args.get("party_type") + " Name::110"]
-
-		columns += [_("Voucher Type") + "::110", _("Voucher No") + ":Dynamic Link/"+_("Voucher Type")+":120",
-			_("Due Date") + ":Date:80"]
-
-		if args.get("party_type") == "Supplier":
-			columns += [_("Bill No") + "::80", _("Bill Date") + ":Date:80"]
-
-		credit_or_debit_note = "Credit Note" if args.get("party_type") == "Customer" else "Debit Note"
-
-		for label in ("Invoiced Amount", "Paid Amount", credit_or_debit_note, "Outstanding Amount"):
-			columns.append({
-				"label": label,
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 120
-			})
-
-		columns += [_("Age (Days)") + ":Int:80"]
-		
-		self.ageing_col_idx_start = len(columns)
-
-		if not "range1" in self.filters:
-			self.filters["range1"] = "30"
-		if not "range2" in self.filters:
-			self.filters["range2"] = "60"
-		if not "range3" in self.filters:
-			self.filters["range3"] = "90"
-			
-		#if self.filters.ageing_based_on == "Due Date":
-		#columns.append({
-		#	"label": _("Not Due"),
-		#	"fieldtype": "Currency",
-		#	"options": "currency",
-		#	"width": 120
-		#
-		#})
-
-
-		for label in ("0-{range1}".format(range1=self.filters["range1"]),
-			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),
-			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
-			"{range3}-{above}".format(range3=cint(self.filters["range3"])+ 1, above=_("Above"))):
-				columns.append({
-					"label": label,
-					"fieldtype": "Currency",
-					"options": "currency",
-					"width": 120
-				})
-
-		columns.append({
-			"fieldname": "currency",
-			"label": _("Currency"),
-			"fieldtype": "Link",
-			"options": "Currency",
-			"width": 100
-		})
-		if args.get("party_type") == "Customer":
-			columns += [
-				_("Territory") + ":Link/Territory:80", 
-				_("Customer Group") + ":Link/Customer Group:120"
-			]
-		if args.get("party_type") == "Supplier":
-			columns += [_("Supplier Type") + ":Link/Supplier Type:80"]
-			
-		
-		#=== Append PDC and LPO columns ==============
-		self.append_extra_columns(columns)
-
-		columns.append(_("Remarks") + "::200")
-
-		return columns
 
 	def get_data(self, party_naming_by, args):
 		from erpnext.accounts.utils import get_currency_precision
@@ -225,7 +153,8 @@ class ReceivablePayableReport(object):
 					# ageing data
 					entry_date = due_date if self.filters.ageing_based_on == "Due Date" else gle.posting_date
 					row += get_ageing_data(cint(self.filters.range1), cint(self.filters.range2),
-						cint(self.filters.range3), self.age_as_on, entry_date, outstanding_amount, self.filters)
+						cint(self.filters.range3), cint(self.filters.range4), 
+						self.age_as_on, entry_date, outstanding_amount, self.filters)
 
 					# issue 6371-Ageing buckets should not have amounts if due date is not reached
 					if self.filters.ageing_based_on == "Due Date" \
@@ -254,7 +183,7 @@ class ReceivablePayableReport(object):
 					row += [voucher_details.get(gle.voucher_no, {}).get("delivery_note")]
 
 
-					row.append(gle.remarks)
+					#row.append(gle.remarks)
 					data.append(row)
 
 		return data
@@ -463,62 +392,22 @@ def execute(filters=None):
 	return ReceivablePayableReport(filters).run(args)
 
 
-def get_ageing_data(first_range, second_range, third_range, age_as_on, entry_date, outstanding_amount, filters=None):
-	# [0-30, 30-60, 60-90, 90-above]
-	outstanding_range = [0.0, 0.0, 0.0, 0.0]
+def get_ageing_data(first_range, second_range, third_range, forth_range, age_as_on, entry_date, outstanding_amount, filters=None):
+	# [0-30, 30-60, 60-90, 90-120, 120-above]
+	outstanding_range = [0.0, 0.0, 0.0, 0.0, 0.0]
 
 	if not (age_as_on and entry_date):
 		return [0] + outstanding_range
 
 	age = (getdate(age_as_on) - getdate(entry_date)).days or 0
 	index = None
-	for i, days in enumerate([first_range, second_range, third_range]):
+	for i, days in enumerate([first_range, second_range, third_range, forth_range]):
 		if age <= days:
 			index = i
 			break
 
-	if index is None: index = 3
+	if index is None: index = 4
 	outstanding_range[index] = outstanding_amount
 
 	return [age] + outstanding_range
 
-def zzzget_ageing_data(first_range, second_range, third_range, age_as_on, entry_date, outstanding_amount, filters=None):
-	# [0-30, 30-60, 60-90, 90-above]
-	if filters and filters.ageing_based_on == "Due Date":
-		outstanding_range = [0.0, 0.0, 0.0, 0.0, 0.0]
-		if not (age_as_on and entry_date):
-			return [0] + outstanding_range
-
-		age = (getdate(age_as_on) - getdate(entry_date)).days or 0
-		index = None
-		for i, days in enumerate([first_range, second_range, third_range]):
-			if age < 0:
-				index = 0
-				break
-			elif age <= days:
-				index = i+1
-				break
-
-		if index is None: index = 4
-		outstanding_range[index] = outstanding_amount
-
-		return [age] + outstanding_range
-
-
-	else:
-		outstanding_range = [0.0, 0.0, 0.0, 0.0]
-
-		if not (age_as_on and entry_date):
-			return [0] + outstanding_range
-
-		age = (getdate(age_as_on) - getdate(entry_date)).days or 0
-		index = None
-		for i, days in enumerate([first_range, second_range, third_range]):
-			if age <= days:
-				index = i
-				break
-
-		if index is None: index = 3
-		outstanding_range[index] = outstanding_amount
-
-		return [age] + outstanding_range

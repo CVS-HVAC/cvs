@@ -55,6 +55,15 @@ frappe.query_reports["CVS Statement of Accounts"] = {
 			"fieldtype": "Int",
 			"default": "90",
 			"reqd": 1
+		},
+		{
+		
+			"fieldname":"range4",
+			"label": __("Ageing Range 4"),
+			"fieldtype": "Int",
+			"default": "120",
+			"reqd": 1
 		}
+
 	]
 }
