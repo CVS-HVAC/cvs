@@ -107,11 +107,11 @@ class ReceivablePayableReport(object):
 		currency_precision = get_currency_precision() or 2
 		dr_or_cr = "debit" if args.get("party_type") == "Customer" else "credit"
 
-		voucher_details = self.get_voucher_details(args.get("party_type"))
+		voucher_details = self.get_voucher_details(args.get("party_type"), self.filters.get("customer"))
 
 		future_vouchers = self.get_entries_after(self.filters.report_date, args.get("party_type"))
 
-		pdc_details = self.get_pdc_details(args.get("party_type"))
+		pdc_details = self.get_pdc_details(args.get("party_type"), self.filters.get("customer"))
 
 		if not self.filters.get("company"):
 			self.filters["company"] = frappe.db.get_single_value('Global Defaults', 'default_company')
@@ -259,12 +259,17 @@ class ReceivablePayableReport(object):
 
 		return self.party_map
 
-	def get_voucher_details(self, party_type):
+	def get_voucher_details(self, party_type, party):
 		voucher_details = frappe._dict()
-
+		conditions = ""
+			
 		if party_type == "Customer":
+			if party: 
+				conditions += " and customer_name = '%s'"%(party)
+
 			for si in frappe.db.sql("""select name, due_date, po_no, delivery_note
-				from `tabSales Invoice` where docstatus=1""", as_dict=1):
+				from `tabSales Invoice` where docstatus=1 
+				{conditions}""".format(conditions=conditions), as_dict=1):
 					voucher_details.setdefault(si.name, si)
 
 		if party_type == "Supplier":
@@ -355,8 +360,13 @@ class ReceivablePayableReport(object):
 		}
 
 	#======= PDC section =========================================================================================================
-	def get_pdc_details(self, party_type):
+	def get_pdc_details(self, party_type, party):
 		pdc_details = frappe._dict()
+
+		conditions = ""
+		if party:
+			conditions += " and pent.party = '%s'"%(party)
+
 		for pdc in frappe.db.sql("""
 				select 
 				pent.party_type,
@@ -368,7 +378,8 @@ class ReceivablePayableReport(object):
 				from `tabPayment Entry` as pent
 				inner join `tabPayment Entry Reference` as pref on (pref.parent = pent.name)
 				where pent.docstatus = 0
-				and pent.reference_date > pent.posting_date""", as_dict=1):
+				and pent.reference_date > pent.posting_date
+				{conditions} """.format(conditions=conditions), as_dict=1):
 				pdc_details.setdefault(pdc.invoice_no, pdc)
 
 		return pdc_details
