@@ -11,6 +11,9 @@ class CVSEmployeeAttendanceandOvertime(Document):
 
 	def get_employees_detail(self):
 		departments = self.departments
+		# Clear Child Table
+		self.set('attendances', {})
+        # Iterating Data Based On Departments
 		for d in self.get('departments'):
 			post_date = self.get('attendance_date');
 			employees = frappe.db.sql("Select name, department, employee_name, eligible_for_overtime from tabEmployee where department  = %s", (d.department,), as_dict = 1)
@@ -18,6 +21,7 @@ class CVSEmployeeAttendanceandOvertime(Document):
 			out_time = frappe.db.sql("Select value from tabSingles where doctype = 'CVS Employee Attendance Settings' and field = 'out_time';")
 			breaktime = frappe.db.sql("Select value from tabSingles where doctype = 'CVS Employee Attendance Settings' and field = 'break_time';")
 			holiday = frappe.db.sql("Select name from tabHoliday where holiday_date	 = %s;",(post_date,), as_dict = 1)
+			# Parsing the Data To Child Table
 			for employee in employees:
 				attendance = self.append('attendances', {})
 				attendance.employee = employee.name
