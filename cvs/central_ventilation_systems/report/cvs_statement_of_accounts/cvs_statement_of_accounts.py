@@ -57,14 +57,6 @@ class ReceivablePayableReport(object):
 			self.filters["range4"] = "120"
 
 			
-		#columns.append({
-		#	"label": _("Not Due"),
-		#	"fieldtype": "Currency",
-		#	"options": "currency",
-		#	"width": 120
-		#})
-
-
 		for label in ("0-{range1}".format(range1=self.filters["range1"]),
 			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),
 			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
@@ -85,15 +77,7 @@ class ReceivablePayableReport(object):
 			"width": 80
 		})
 		
-		#if args.get("party_type") == "Customer":
-		#	columns += [
-		#		_("Territory") + ":Link/Territory:80", 
-		#		_("Customer Group") + ":Link/Customer Group:120"
-		#	]
-		#if args.get("party_type") == "Supplier":
-		#	columns += [_("Supplier Type") + ":Link/Supplier Type:80"]
-			
-		
+
 		#=== Append PDC and LPO columns ==============
 		self.append_extra_columns(columns)
 
@@ -265,7 +249,7 @@ class ReceivablePayableReport(object):
 			
 		if party_type == "Customer":
 			if party: 
-				conditions += " and customer_name = '%s'"%(party)
+				conditions += " and customer = '%s'"%(party)
 
 			for si in frappe.db.sql("""select name, due_date, po_no, delivery_note
 				from `tabSales Invoice` where docstatus=1 
@@ -369,17 +353,16 @@ class ReceivablePayableReport(object):
 
 		for pdc in frappe.db.sql("""
 				select 
-				pent.party_type,
-				pent.party,
 				pref.reference_name as invoice_no,
-				pent.reference_date as pdc_date,
-				pref.allocated_amount as pdc_amount,
-				pent.reference_no as pdc_ref
+				max(pent.reference_date) as pdc_date,
+				sum(ifnull(pref.allocated_amount,0)) as pdc_amount,
+				GROUP_CONCAT(pent.reference_no SEPARATOR ', ') as pdc_ref
 				from `tabPayment Entry` as pent
 				inner join `tabPayment Entry Reference` as pref on (pref.parent = pent.name)
 				where pent.docstatus = 0
 				and pent.reference_date > pent.posting_date
-				{conditions} """.format(conditions=conditions), as_dict=1):
+				{conditions} 
+				group by pref.reference_name""".format(conditions=conditions), as_dict=1):
 				pdc_details.setdefault(pdc.invoice_no, pdc)
 
 		return pdc_details
